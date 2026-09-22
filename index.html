@@ -88,11 +88,13 @@ function hex6(cx,cy,r){let p=[];for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-3
 /* tessellation generators */
 function tGenesis(){
   let s='';
+  // concentric rings expanding from a point
   for(let r=0;r<9;r++){
     const radius=r*14+5, op=Math.max(.08,1-r*.1);
     const c=r%2?NX2:NX;
     s+=`<circle cx="95" cy="133" r="${radius}" fill="none" stroke="${c}" stroke-width="${r===0?2:1}" opacity="${op}"/>`;
   }
+  // nodes on rings
   for(let ring=1;ring<6;ring++){
     const n=ring*5, R=ring*16;
     for(let i=0;i<n;i++){
@@ -105,8 +107,10 @@ function tGenesis(){
 }
 function tExpand(){
   let s='';
+  // fullerene skeleton simplified — hex lattice expanding outward
   const cx=95,cy=133,r=12;
   const pts=[];
+  // center + 2 rings of hex
   pts.push([cx,cy]);
   for(let i=0;i<6;i++){const a=Math.PI/3*i;pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}
   for(let i=0;i<12;i++){const a=Math.PI/6*i, R=r*2.1;pts.push([cx+R*Math.cos(a),cy+R*Math.sin(a)]);}
@@ -115,16 +119,19 @@ function tExpand(){
     const d=Math.hypot(px-cx,py-cy), op=Math.max(.2,1-d/80);
     s+=`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${i===0?4:2}" fill="${i===0?NX:i<7?NX2:CR}" opacity="${op}"/>`;
   });
+  // expansion arrows
   for(let a=0;a<6;a++){const ang=Math.PI/3*a, x=cx+55*Math.cos(ang),y=cy+55*Math.sin(ang);s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${WN}" stroke-width=".7" opacity=".3" stroke-dasharray="3,3"/>`;}
   return wrap(s);
 }
 function tRLE(){
   let s='';
+  // before: many repeated bytes
   for(let i=0;i<8;i++)for(let j=0;j<8;j++){
     const x=10+j*22, y=20+i*22;
     s+=`<rect x="${x}" y="${y}" width="18" height="18" rx="2" fill="${(i+j)%7===0?CR:'#0a2020'}" opacity="${.4+((i*j)%5)*.1}" stroke="${DIM}" stroke-width=".5"/>`;
     if(i===0)s+=`<text x="${x+9}" y="${y+12}" text-anchor="middle" font-size="7" font-family="monospace" fill="${NX}" opacity=".7">01</text>`;
   }
+  // compression arrow
   s+=`<rect x="20" y="200" width="150" height="40" rx="4" fill="#0a2020" stroke="${NX}" stroke-width="1"/>`;
   s+=`<text x="95" y="217" text-anchor="middle" font-size="9" font-family="monospace" fill="${WN}">FE 3C 01</text>`;
   s+=`<text x="95" y="231" text-anchor="middle" font-size="7" font-family="monospace" fill="${NX2}">3 bytes → 60 NODEs</text>`;
@@ -133,13 +140,17 @@ function tRLE(){
 }
 function tDefPattern(){
   let s='';
+  // pentagon pattern defined once, referenced many
   const penta=(cx,cy,r,c)=>{let pts=[];for(let i=0;i<5;i++){const a=Math.PI/180*(72*i-90);pts.push(`${(cx+r*Math.cos(a)).toFixed(1)},${(cy+r*Math.sin(a)).toFixed(1)}`);};return `<polygon points="${pts.join(' ')}" fill="none" stroke="${c}" stroke-width="1.2"/>`;};
+  // one definition
   s+=`<rect x="10" y="10" width="80" height="70" rx="3" fill="#0a2020" stroke="${WN}" stroke-width="1"/>`;
   s+=penta(50,42,28,NX);
   s+=`<text x="50" y="72" text-anchor="middle" font-size="7" fill="${WN}">DEF_PATTERN 0x01</text>`;
+  // 12 references
   const positions=[[140,40],[140,90],[140,140],[140,190],[140,240],[95,240],[50,240],[15,240],[15,190],[15,140],[15,90],[95,40]];
   positions.forEach(([px,py])=>{ s+=`<rect x="${px-15}" y="${py-15}" width="30" height="30" rx="3" fill="#020408" stroke="${NX2}" stroke-width=".8"/>`; s+=penta(px,py,11,NX2); });
   s+=`<text x="95" y="200" text-anchor="middle" font-size="7" fill="${DIM}">× 12 REF_PATTERN</text>`;
+  // arrows from def to refs
   positions.slice(0,3).forEach(([px,py])=>{ s+=`<line x1="90" y1="42" x2="${px-15}" y2="${py}" stroke="${WN}" stroke-width=".5" opacity=".4" stroke-dasharray="2,2"/>`; });
   return wrap(s);
 }
@@ -178,6 +189,7 @@ function tBinaryStream(){
 }
 function tDelta(){
   let s='';
+  // two frames, only delta highlighted
   const frame1=[20,25,25,28,30,25,22,20];
   const frame2=[20,25,26,28,30,24,22,21];
   frame1.forEach((v,i)=>{
@@ -191,32 +203,39 @@ function tDelta(){
   });
   s+=`<text x="95" y="215" text-anchor="middle" font-size="8" fill="${DIM}">only changed bytes transmitted</text>`;
   s+=`<text x="95" y="228" text-anchor="middle" font-size="9" fill="${NX}">8 bytes → 2 DELTA bytes</text>`;
+  // stream visualization
   for(let i=0;i<8;i++){const x=15+i*21; s+=`<rect x="${x}" y="20" width="16" height="16" rx="2" fill="#0a2020" stroke="${DIM}" stroke-width=".5"/>`;s+=`<text x="${x+8}" y="31" text-anchor="middle" font-size="7" fill="${NX}">FA</text>`;}
   s+=`<text x="95" y="50" text-anchor="middle" font-size="7" fill="${WN}">DELTA opcodes (0xFA)</text>`;
   return wrap(s);
 }
 function tJNI(){
   let s='';
+  // Java layer
   s+=`<rect x="15" y="20" width="160" height="60" rx="4" fill="#0a1520" stroke="${RB}" stroke-width="1.2"/>`;
   s+=`<text x="95" y="42" text-anchor="middle" font-size="10" fill="${RB}" font-family="monospace">Java Engine</text>`;
   s+=`<text x="95" y="57" text-anchor="middle" font-size="8" fill="${DIM}">NullNXBridge.java</text>`;
   s+=`<text x="95" y="70" text-anchor="middle" font-size="7" fill="${DIM}">parseStream() · createManager()</text>`;
+  // bridge
   s+=`<rect x="55" y="100" width="80" height="36" rx="4" fill="#0a2010" stroke="${NX}" stroke-width="1.5"/>`;
   s+=`<text x="95" y="119" text-anchor="middle" font-size="9" fill="${NX}">JNI BRIDGE</text>`;
   s+=`<text x="95" y="130" text-anchor="middle" font-size="7" fill="${DIM}">jlong · jstring · jint</text>`;
+  // C++ layer
   s+=`<rect x="15" y="156" width="160" height="60" rx="4" fill="#1a0a10" stroke="${CR}" stroke-width="1.2"/>`;
   s+=`<text x="95" y="178" text-anchor="middle" font-size="10" fill="${CR}" font-family="monospace">C++ NullNX Core</text>`;
   s+=`<text x="95" y="193" text-anchor="middle" font-size="8" fill="${DIM}">null_nx_core.cpp</text>`;
   s+=`<text x="95" y="207" text-anchor="middle" font-size="7" fill="${DIM}">parse_stream() · serialize()</text>`;
+  // arrows
   s+=`<line x1="95" y1="80" x2="95" y2="100" stroke="${NX}" stroke-width="1.5" marker-end="url(#arr)"/>`;
   s+=`<line x1="95" y1="136" x2="95" y2="156" stroke="${NX}" stroke-width="1.5" marker-end="url(#arr)"/>`;
   s+=`<defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0L6,3L0,6Z" fill="${NX}"/></marker></defs>`;
+  // offload annotation
   s+=`<text x="95" y="240" text-anchor="middle" font-size="8" fill="${WN}">zero-copy offload at JNI boundary</text>`;
   s+=`<text x="95" y="252" text-anchor="middle" font-size="8" fill="${NX}">libnullnxbridge.so</text>`;
   return wrap(s);
 }
 function tHamming(){
   let s='';
+  // 8-bit data word + parity grid
   const bits=[1,0,1,1,0,0,1,0];
   bits.forEach((b,i)=>{
     const x=20+i*20, y=30;
@@ -224,39 +243,48 @@ function tHamming(){
     s+=`<text x="${x+8.5}" y="${y+12}" text-anchor="middle" font-size="9" fill="#fff">${b}</text>`;
   });
   s+=`<text x="95" y="22" text-anchor="middle" font-size="7" fill="${DIM}">DATA WORD (8 bits)</text>`;
-  const parity=[0,1,0,1,1];
+  // hamming parity bits
+  const parity=[0,1,0,1,1]; // conceptual
   s+=`<text x="95" y="70" text-anchor="middle" font-size="7" fill="${WN}">+ HAMMING PARITY BITS</text>`;
   parity.forEach((b,i)=>{
     const x=35+i*24, y=75;
     s+=`<rect x="${x}" y="${y}" width="17" height="17" rx="2" fill="${WN}" opacity="${b?.5:.15}" stroke="${WN}" stroke-width=".8"/>`;
     s+=`<text x="${x+8.5}" y="${y+12}" text-anchor="middle" font-size="9" fill="#fff">${b}</text>`;
   });
+  // encoded stream
   s+=`<rect x="15" y="115" width="160" height="30" rx="3" fill="#0a2020" stroke="${NX}" stroke-width="1"/>`;
   s+=`<text x="95" y="131" text-anchor="middle" font-size="8" fill="${NX}">10110010 01011</text>`;
   s+=`<text x="95" y="143" text-anchor="middle" font-size="7" fill="${DIM}">data + parity → encoded</text>`;
+  // error detection
   s+=`<rect x="40" y="165" width="110" height="50" rx="3" fill="#0a0a20" stroke="${CR}" stroke-width="1"/>`;
   s+=`<text x="95" y="182" text-anchor="middle" font-size="8" fill="${CR}">1-BIT ERROR DETECTED</text>`;
   s+=`<text x="95" y="196" text-anchor="middle" font-size="8" fill="${NX}">↓ auto-corrected</text>`;
   s+=`<text x="95" y="208" text-anchor="middle" font-size="7" fill="${DIM}">no retransmit needed</text>`;
+  // applies over NullNX payload
   s+=`<text x="95" y="245" text-anchor="middle" font-size="7" fill="${WN}">wraps any NullNX payload byte</text>`;
   s+=`<text x="95" y="258" text-anchor="middle" font-size="7" fill="${DIM}">ideal for 1GB drone storage</text>`;
   return wrap(s);
 }
 function tOffload(){
   let s='';
+  // large block (full state) → tiny block (NullNX stream)
   s+=`<rect x="15" y="20" width="130" height="100" rx="4" fill="#0a2020" stroke="${RB}" stroke-width="1"/>`;
   s+=`<text x="80" y="55" text-anchor="middle" font-size="9" fill="${RB}">FULL COMPUTE STATE</text>`;
   s+=`<text x="80" y="70" text-anchor="middle" font-size="8" fill="${DIM}">60 nodes × 90 edges</text>`;
   s+=`<text x="80" y="83" text-anchor="middle" font-size="8" fill="${DIM}">32 faces × mission data</text>`;
   s+=`<text x="80" y="100" text-anchor="middle" font-size="7" fill="${WN}">~14,400 bytes in RAM</text>`;
+  // arrow
   s+=`<text x="155" y="75" font-size="18" fill="${NX}">→</text>`;
+  // tiny NullNX stream
   s+=`<rect x="155" y="40" width="25" height="60" rx="4" fill="#020408" stroke="${NX}" stroke-width="1.5"/>`;
   s+=`<text x="168" y="65" text-anchor="middle" font-size="7" fill="${NX}" transform="rotate(-90,168,65)">NullNX</text>`;
   s+=`<text x="168" y="110" text-anchor="middle" font-size="7" fill="${WN}">9B</text>`;
+  // reload
   s+=`<line x1="168" y1="102" x2="168" y2="140" stroke="${NX}" stroke-width="1" stroke-dasharray="3,2"/>`;
   s+=`<text x="95" y="155" text-anchor="middle" font-size="8" fill="${NX}">INSTANT RELOAD</text>`;
   s+=`<text x="95" y="167" text-anchor="middle" font-size="7" fill="${DIM}">stream → expand → full state</text>`;
   s+=`<text x="95" y="179" text-anchor="middle" font-size="7" fill="${DIM}">in microseconds</text>`;
+  // mission queue
   s+=`<rect x="15" y="200" width="160" height="50" rx="3" fill="#0a2020" stroke="${NX2}" stroke-width=".8"/>`;
   s+=`<text x="95" y="220" text-anchor="middle" font-size="8" fill="${NX2}">MISSION QUEUE</text>`;
   for(let i=0;i<5;i++){
@@ -268,6 +296,7 @@ function tOffload(){
 }
 function tMission(){
   let s='';
+  // ArduPilot-style mission as NullNX stream
   const cmds=[{m:'0x10',label:'TAKEOFF',py:'1E',color:NX},
     {m:'0x11',label:'WAYPOINT',py:'26 00 69 00',color:NX2},
     {m:'0x11',label:'WAYPOINT',py:'27 01 6A 00',color:NX2},
@@ -287,10 +316,12 @@ function tMission(){
 }
 function tVertexCompute(){
   let s='';
+  // one vertex with 3 edges (trivalent graph)
   const cx=95,cy=110;
   s+=`<circle cx="${cx}" cy="${cy}" r="18" fill="#0a2020" stroke="${NX}" stroke-width="1.8"/>`;
   s+=`<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" fill="${NX}">0x24</text>`;
   s+=`<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="7" fill="${DIM}">COMPUTE</text>`;
+  // 3 edges (trivalent — every fullerene vertex has degree 3)
   [[cx,cy-60],[cx-52,cy+30],[cx+52,cy+30]].forEach(([ex,ey],i)=>{
     s+=`<line x1="${cx}" y1="${cy}" x2="${ex}" y2="${ey}" stroke="${NX2}" stroke-width="1.2" opacity=".7"/>`;
     s+=`<circle cx="${ex}" cy="${ey}" r="12" fill="#020408" stroke="${NX2}" stroke-width="1"/>`;
@@ -305,6 +336,7 @@ function tVertexCompute(){
 }
 function tEdgeChannel(){
   let s='';
+  // 3 parallel data channels
   for(let i=0;i<3;i++){
     const y=40+i*60, bw=[8,4,2][i], c=[NX,NX2,DIM][i];
     s+=`<line x1="20" y1="${y}" x2="170" y2="${y}" stroke="${c}" stroke-width="${bw}" opacity=".6"/>`;
@@ -318,6 +350,7 @@ function tEdgeChannel(){
 }
 function tPentagon(){
   let s='';
+  // 12 pentagons arranged in a ring
   for(let pi=0;pi<12;pi++){
     const ang=Math.PI/6*pi, r=70, cx=95+r*Math.cos(ang), cy=120+r*Math.sin(ang);
     let pts=[];for(let v=0;v<5;v++){const a=Math.PI/180*(72*v-90);pts.push(`${(cx+14*Math.cos(a)).toFixed(1)},${(cy+14*Math.sin(a)).toFixed(1)}`);}
@@ -334,6 +367,7 @@ function tPentagon(){
 }
 function tHexFace(){
   let s='';
+  // 20 hexagons in a ring-of-rings pattern
   for(let hi=0;hi<20;hi++){
     const ang=Math.PI/10*hi, r=hi<6?40:70, cx=95+r*Math.cos(ang), cy=120+r*Math.sin(ang);
     let pts=[];for(let v=0;v<6;v++){const a=Math.PI/3*v;pts.push(`${(cx+12*Math.cos(a)).toFixed(1)},${(cy+12*Math.sin(a)).toFixed(1)}`);}
@@ -347,6 +381,7 @@ function tHexFace(){
 }
 function tStateCell(){
   let s='';
+  // face as a key-value memory cell
   const kv=[['lat','38.001'],['lon','-97.002'],['alt','30'],['spd','8'],['bat','92%']];
   kv.forEach(([k,v],i)=>{
     const y=20+i*44;
@@ -364,15 +399,18 @@ function tStateCell(){
 }
 function tJsonRef(){
   let s='';
+  // stream with tiny ref vs full config
   s+=`<rect x="10" y="20" width="170" height="22" rx="3" fill="#0a2020" stroke="${NX}" stroke-width="1"/>`;
   s+=`<text x="95" y="35" text-anchor="middle" font-size="8" fill="${NX}">04 01 — 2 bytes in stream</text>`;
   s+=`<text x="95" y="56" text-anchor="middle" font-size="8" fill="${DIM}">JSON_REF points to →</text>`;
+  // large json block
   const jsonLines=['{','  "config_id": 1,','  "resolution":','  "1920x1080",','  "refresh": 120','}'];
   jsonLines.forEach((l,i)=>{
     s+=`<text x="20" y="${75+i*14}" font-size="7" fill="${DIM}" font-family="monospace">${l}</text>`;
   });
   s+=`<rect x="10" y="65" width="170" height="90" rx="3" fill="none" stroke="${WN}" stroke-width=".7" stroke-dasharray="3,2"/>`;
   s+=`<text x="180" y="112" font-size="7" fill="${WN}">config_1.json</text>`;
+  // size comparison
   s+=`<rect x="10" y="170" width="60" height="35" rx="3" fill="#020408" stroke="${NX}" stroke-width="1"/>`;
   s+=`<text x="40" y="188" text-anchor="middle" font-size="14" fill="${NX}">2B</text>`;
   s+=`<text x="40" y="200" text-anchor="middle" font-size="7" fill="${DIM}">in stream</text>`;
@@ -387,15 +425,18 @@ function tJsonRef(){
 }
 function tBinaryRef(){
   let s='';
+  // raw sensor blob referenced by id
   s+=`<rect x="10" y="20" width="170" height="22" rx="3" fill="#0a2020" stroke="${NX}" stroke-width="1"/>`;
   s+=`<text x="95" y="35" text-anchor="middle" font-size="8" fill="${NX}">05 AE — 2 bytes in stream</text>`;
   s+=`<text x="95" y="56" text-anchor="middle" font-size="7" fill="${DIM}">BINARY_REF 0xAE points to →</text>`;
+  // binary blob visualization
   let blobStr='';
   for(let i=0;i<48;i++) blobStr+=Math.floor(Math.random()*256).toString(16).padStart(2,'0')+' ';
   const lines=blobStr.match(/.{1,24}/g)||[];
   lines.slice(0,5).forEach((l,i)=>{ s+=`<text x="15" y="${75+i*12}" font-size="6.5" fill="${DIM}" font-family="monospace">${l}</text>`; });
   s+=`<rect x="10" y="64" width="170" height="75" rx="3" fill="none" stroke="${CR}" stroke-width=".7" stroke-dasharray="3,2"/>`;
   s+=`<text x="95" y="152" text-anchor="middle" font-size="7" fill="${CR}">sensor_blob_0xAE.bin</text>`;
+  // size
   s+=`<text x="95" y="180" text-anchor="middle" font-size="8" fill="${NX}">2 bytes ref → 4096 byte blob</text>`;
   s+=`<text x="95" y="193" text-anchor="middle" font-size="7" fill="${DIM}">lidar / camera / telemetry data</text>`;
   s+=`<text x="95" y="207" text-anchor="middle" font-size="7" fill="${DIM}">lives in 1GB drone storage</text>`;
@@ -405,8 +446,10 @@ function tBinaryRef(){
 }
 function tExpand252(){
   let s='';
+  // the 252-principle: C(10,5)
   s+=`<text x="95" y="50" text-anchor="middle" font-size="36" font-family="Cinzel,serif" fill="${NX}">252</text>`;
   s+=`<text x="95" y="68" text-anchor="middle" font-size="9" fill="${DIM}">C(10,5) = 10! / (5! × 5!)</text>`;
+  // expansion factors table
   const factors=[12,20,32,60,90,252];
   factors.forEach((f,i)=>{
     const x=15+i*30, y=90;
@@ -415,17 +458,20 @@ function tExpand252(){
   });
   s+=`<text x="95" y="83" text-anchor="middle" font-size="7" fill="${WN}">EXPAND factors:</text>`;
   ['penta','hex','face','vert','edge','struct'].forEach((l,i)=>{ s+=`<text x="${27+i*30}" y="134" text-anchor="middle" font-size="6" fill="${DIM}">${l}</text>`; });
+  // opcode
   s+=`<rect x="30" y="150" width="130" height="28" rx="4" fill="#0a2020" stroke="${NX}" stroke-width="1.2"/>`;
   s+=`<text x="95" y="169" text-anchor="middle" font-size="10" fill="${NX}">FB [factor_idx]</text>`;
   s+=`<text x="95" y="148" text-anchor="middle" font-size="7" fill="${WN}">EXPAND opcode:</text>`;
+  // example
   s+=`<text x="95" y="210" text-anchor="middle" font-size="8" fill="${DIM}">FB 05 VERTEX 0x00</text>`;
   s+=`<text x="95" y="222" text-anchor="middle" font-size="7" fill="${DIM}">= 252 VERTEX declarations</text>`;
   s+=`<text x="95" y="234" text-anchor="middle" font-size="7" fill="${NX}">4 bytes → 504 bytes expanded</text>`;
-  s+=`<text x="95" y="262" text-anchor="middle" font-size="7" fill="${WN}">max unique states before symmetry repeats</text>`;
+  s+=`<text x="95" y="262" text-anchor="middle" font-size:"7" fill="${WN}">max unique states before symmetry repeats</text>`;
   return wrap(s);
 }
 function tTelemetry(){
   let s='';
+  // live sensor readings as markers
   const readings=[['TEMP','0x03','25°C',NX],['BATT','0x03','92%',NX2],['ALT','0x03','30m',WN],['SPD','0x03','8m/s',CR]];
   readings.forEach(([label,m,val,c],i)=>{
     const y=20+i*56;
@@ -435,6 +481,7 @@ function tTelemetry(){
     s+=`<text x="35" y="${y+30}" text-anchor="middle" font-size="7" fill="${c}">TELE</text>`;
     s+=`<text x="110" y="${y+18}" text-anchor="middle" font-size="9" fill="${c}">${label}</text>`;
     s+=`<text x="110" y="${y+33}" text-anchor="middle" font-size="14" fill="#fff">${val}</text>`;
+    // raw byte
     s+=`<text x="160" y="${y+26}" text-anchor="middle" font-size="7" fill="${DIM}">${parseInt(val).toString(16).padStart(2,'0')||'??'}</text>`;
   });
   s+=`<text x="95" y="252" text-anchor="middle" font-size="7" fill="${DIM}">2 bytes per reading (marker+payload)</text>`;
@@ -444,179 +491,189 @@ function tTelemetry(){
 
 /* ---- card definitions ---- */
 const CARDS=[
-  {key:'0x00',group:'genesis',title:'THE GENESIS POINT',sub:'· the seed of everything',spd:6,
+  {key:'0x00',group:'genesis',title:'THE GENESIS POINT',sub:'·  the seed of everything',spd:6,
    tess:tGenesis,
    h:'One byte. All of it.',
    text:'A single <b>0x00 NULL byte</b> is the genesis point. It carries no payload, takes no space worth counting, and yet contains the rule for expanding into a full 60-node fullerene compute graph. This is the principle: compress to nothing deployable, expand on demand.',
-   demo:{label:'Genesis byte',stream:'00',expand:'→ 60 vertices, 90 edges, 32 faces\n→ 252 unrolled macro states\n→ fully expanded in < 1ms'}},
-  {key:'0x01',group:'genesis',title:'EXPANSION CORE',sub:'· 1 to 60 nodes',spd:7.5,
-   tess:tExpand,
-   h:'From point to lattice.',
-   text:'The expansion engine takes the genesis point and unfolds it through spherical symmetry coordinates. The 60 vertices of the truncated icosahedron map directly to parallel compute units, creating an instant supercompute mesh from a single instruction.',
-   demo:{label:'Expansion sequence',stream:'FE 3C',expand:'→ node count: 60 active\n→ topology: C60 fullerene graph\n→ overhead: zero network lag'}},
-  {key:'0x02',group:'genesis',title:'RLE COMPRESSION',sub:'· repeat length encoding',spd:9,
-   tess:tRLE,
-   h:'Zero dead bytes.',
-   text:'Repetitive sensor streams and idle states are compressed via Run-Length Encoding. Sequences of identical status bytes collapse into a single marker and count, reducing telemetry overhead by over 98% across wireless links.',
-   demo:{label:'RLE Stream',stream:'FE 3C 01',expand:'→ raw bytes: 120 bytes\n→ compressed: 3 bytes\n→ ratio: <span class="ratio">40:1 compression</span>'}},
-  {key:'0x03',group:'genesis',title:'DEF_PATTERN',sub:'· pattern definition',spd:8.2,
-   tess:tDefPattern,
-   h:'Define once, reference infinitely.',
-   text:'Instead of repeating complex configuration payloads across every packet, DEF_PATTERN uploads a template once and assigns it an ID. Subsequent packets simply reference the ID, saving critical bandwidth during mission execution.',
-   demo:{label:'Pattern reference',stream:'01 0F',expand:'→ pattern id: 0x0F stored\n→ memory usage: 16 bytes\n→ status: <span class="ok">cached ready</span>'}},
-  {key:'0x04',group:'core',title:'HEXAGONS',sub:'· 20 compute surfaces',spd:6.5,
-   tess:tHexGrid,
-   h:'The calculation face.',
-   text:'The 20 hexagonal faces of the C60 fullerene act as primary processing nodes. Each hexagon handles concurrent data pipelines, forming an interconnected grid designed to bypass traditional data center bottlenecks.',
-   demo:{label:'Hex grid state',stream:'23 14',expand:'→ active hexes: 20/20\n→ throughput: 64-bit parallel\n→ core load: optimal'}},
-  {key:'0x05',group:'core',title:'SOLITON STREAM',sub:'· wave packet propagation',spd:11,
-   tess:tSoliton,
-   h:'Packets that never decay.',
-   text:'Soliton waves propagate through the NullNX graph without losing shape or energy. This mathematical property guarantees that even across noisy channels or low-power wireless links, instructions arrive intact and error-free.',
-   demo:{label:'Soliton packet',stream:'FD 05',expand:'→ dispersion: 0.00%\n→ signal integrity: 100%\n→ velocity: constant'}},
-  {key:'0x06',group:'core',title:'BINARY STREAM',sub:'· raw byte pipeline',spd:8,
-   tess:tBinaryStream,
-   h:'The raw wire format.',
-   text:'At the lowest level, NullNX operates as a continuous, tightly packed binary stream. Without HTTP headers, JSON bloat, or XML tags, every single byte is an instruction or a direct memory coordinate.',
-   demo:{label:'Byte inspection',stream:'10 2E 11 26 00',expand:'→ stream length: 5 bytes\n→ parse time: 0.02ms\n→ type: directive sequence'}},
-  {key:'0x07',group:'core',title:'DELTA ENCODING',sub:'· transmit only changes',spd:10,
-   tess:tDelta,
-   h:'Silence is data.',
-   text:'When system states remain stable, transmitting redundant telemetry wastes power and bandwidth. Delta encoding ensures only state mutations are pushed across the wire, dropping idle traffic down to near zero.',
-   demo:{label:'Delta transmission',stream:'FA 02 4A',expand:'→ previous state: cached\n→ delta payload: 2 bytes\n→ bandwidth saved: 94%'}},
-  {key:'0x08',group:'bridge',title:'JNI BRIDGE',sub:'· java to c++ offload',spd:7,
-   tess:tJNI,
-   h:'Zero-copy native speed.',
-   text:'The Java runtime layer interfaces directly with the C++ NullNX core via an optimized JNI bridge. This eliminates garbage collection pauses and marshaling overhead, routing mission commands straight to bare metal.',
-   demo:{label:'Bridge status',stream:'FF 01',expand:'→ jni linkage: active\n→ memory copy: zero-copy\n→ execution: native C++'}},
-  {key:'0x09',group:'bridge',title:'HAMMING WRAPPER',sub:'· error correction',spd:8.5,
-   tess:tHamming,
-   h:'Self-healing bits.',
-   text:'Critical telemetry blocks are wrapped in Hamming error-correction codes. If cosmic rays or RF interference corrupts bits in transit, the payload automatically detects and corrects 1-bit errors instantly without retransmission.',
-   demo:{label:'Hamming check',stream:'FE 08',expand:'→ error state: clean\n→ correction: active\n→ reliability: <span class="ok">99.999%</span>'}},
-  {0x0A:null,key:'0x0A',group:'bridge',title:'STATE OFFLOAD',sub:'· 14KB to 9 bytes',spd:9.5,
-   tess:tOffload,
-   h:'Compress the entire world.',
-   text:'A complete compute state comprising 60 nodes, 90 edges, and mission parameters is compressed into a 9-byte NullNX stream for storage or transmission, then fully reconstructed on the receiving end in microseconds.',
-   demo:{label:'Offload block',stream:'00 3C 5A 09',expand:'→ uncompressed: 14,400 B\n→ compressed: 9 B\n→ state: <span class="ok">persisted</span>'}},
-  {key:'0x0B',group:'bridge',title:'MISSION QUEUE',sub:'· waypoint streaming',spd:7.2,
-   tess:tMission,
-   h:'ArduPilot ready in bytes.',
-   text:'Complex drone missions—takeoffs, waypoints, loiters, and landings—are encoded into ultra-compact byte sequences that replace hundreds of lines of MAVLink text XML with clean, deterministic binary commands.',
-   demo:{label:'Mission sequence',stream:'10 11 11 12 20',expand:'→ waypoints loaded: 5\n→ protocol: NullNX binary\n→ target: autopilot core'}},
-  {key:'0x0C',group:'graph',title:'VERTEX COMPUTE',sub:'· 60 micro-nodes',spd:6.8,
-   tess:tVertexCompute,
-   h:'Degree-3 processing.',
-   text:'Every vertex in the C60 fullerene graph has an exact degree of 3 (trivalent). This uniform geometry allows parallel distributed computing across 60 independent micro-nodes without routing collisions or deadlock.',
-   demo:{label:'Vertex state',stream:'24 3C',expand:'→ node id: #3C\n→ degree: 3 (trivalent)\n→ status: <span class="ok">computing</span>'}},
-  {key:'0x0D',group:'graph',title:'EDGE CHANNELS',sub:'· 90 communication links',spd:8.8,
-   tess:tEdgeChannel,
-   h:'The neural mesh.',
-   text:'The 90 edges connecting the fullerene vertices serve as dedicated routing channels. Bandwidth and priority are dynamically allocated per edge, creating a resilient mesh network inside a single software binary.',
-   demo:{label:'Edge allocation',stream:'21 5A',expand:'→ active edges: 90/90\n→ congestion: 0.0%\n→ routing: optimal'}},
-  {key:'0x0E',group:'graph',title:'PENTAGON CELLS',sub:'· 12 control nodes',spd:9.2,
-   tess:tPentagon,
-   h:'The curvature anchors.',
-   text:'The 12 pentagonal faces provide mathematical closure and spherical curvature to the compute graph. They act as master control nodes that govern global state transitions and consensus across the 60 vertices.',
-   demo:{label:'Pentagon anchor',stream:'22 0C',expand:'→ anchors active: 12\n→ consensus: achieved\n→ curvature: closed'}},
-  {key:'0x0F',group:'graph',title:'HEX FACE MEMORY',sub:'· 32 state surfaces',spd:7.8,
-   tess:tHexFace,
-   h:'In-graph storage.',
-   text:'Combining the 12 pentagons and 20 hexagons yields exactly 32 faces. Each face stores local state variables—latitudes, longitudes, velocities, and sensor thresholds—directly inside the topology geometry.',
-   demo:{label:'Face memory',stream:'23 20',expand:'→ total faces: 32\n→ addressable: yes\n→ cache hit: 99.4%'}},
-  {key:'0x10',group:'storage',title:'STATE CELLS',sub:'· key-value in-graph',spd:8.4,
-   tess:tStateCell,
-   h:'Variables as geometry.',
-   text:'Key-value pairs are mapped directly to face coordinates within the fullerene structure. This eliminates traditional hash table lookups and replaces them with direct topological traversal.',
-   demo:{label:'KV mapping',stream:'26 05',expand:'→ keys mapped: 32\n→ lookup speed: O(1)\n→ collision risk: zero'}},
-  {key:'0x11',group:'storage',title:'JSON REFERENCE',sub:'· external config pointers',spd:6.2,
-   tess:tJsonRef,
-   h:'Keep the stream lean.',
-   text:'When massive configuration blocks are needed, the NullNX stream does not bloat. It passes a 2-byte JSON_REF pointer that tells the runtime where to load or cache the required configuration file on disk.',
-   demo:{label:'JSON ref',stream:'04 01',expand:'→ ref id: 0x01\n→ target: config_1.json\n→ stream overhead: 2 bytes'}},
-  {key:'0x12',group:'storage',title:'BINARY REFERENCE',sub:'· 4KB blob pointers',spd:10.2,
-   tess:tBinaryRef,
-   h:'Pointers to raw weight blobs.',
-   text:'Neural network weights, lidar point clouds, and high-res camera frames are stored externally in 1GB local storage. The stream simply references them via BINARY_REF, maintaining lightning-fast transmission speeds.',
-   demo:{label:'Binary blob ref',stream:'05 AE',expand:'→ blob id: 0xAE\n→ size: 4,096 bytes\n→ transmission: reference only'}},
-  {key:'0x13',group:'storage',title:'EXPAND_252',sub:'· C(10,5) constant',spd:8.6,
+   demo:{label:'Genesis byte',stream:'00',expand:'→ 60 vertices, 90 edges, 32 faces\n→ 252 unique compute states\n→ full mission capability\nfrom 1 byte.'}},
+
+  {key:'0xFB',group:'genesis',title:'THE EXPAND OPCODE',sub:'scale by fullerene factor',spd:7,
    tess:tExpand252,
-   h:'The magic combinatorial constant.',
-   text:'The combinatorial constant 252 (derived from C(10,5)) governs the maximum unique expansion states before symmetry repeats. It anchors all scale transitions within the NullNX compiler and runtime engine.',
-   demo:{label:'Constant math',stream:'FB 05',expand:'→ formula: C(10,5)\n→ value: <span class="warn">252</span>\n→ symmetry limit: enforced'}},
-  {key:'0x14',group:'storage',title:'LIVE TELEMETRY',sub:'· instant sensor snapshot',spd:7.6,
+   h:'FB [factor] → N copies, auto-indexed',
+   text:'<b>EXPAND (0xFB)</b> followed by a factor index multiplies any marker by a fullerene constant: 12, 20, 32, 60, 90, or 252. Four bytes can declare the entire vertex set of a C60 fullerene. The 252-Principle is C(10,5) — the max unique states before rotational symmetry repeats.',
+   demo:{label:'Vertex set declaration',stream:'FB 05 20 00',expand:'= 252 × VERTEX starting at ID 0x00\n504 bytes expanded\n4 bytes compressed\n126:1 ratio'}},
+
+  {key:'0xFE',group:'compress',title:'RUN-LENGTH',sub:'repeat N times, not N copies',spd:8,
+   tess:tRLE,
+   h:'FE [count] [marker] [payload]',
+   text:'<b>RUN (0xFE)</b> replaces any repeated sequence. Instead of writing 60 NODE markers, write three bytes: <b>FE 3C 01</b>. The stream engine expands on read, never on disk. On a 1GB drone drive, this is the difference between fitting 10 missions and fitting 1,000.',
+   demo:{label:'60 NODE markers',stream:'FE 3C 01',expand:'= [01 00][01 01]...[01 3B]\n3 bytes compressed\n120 bytes raw\n40:1 ratio',ratio:true}},
+
+  {key:'0xFD',group:'compress',title:'DEF_PATTERN',sub:'define once, reference many',spd:11,
+   tess:tDefPattern,
+   h:'FD [id] [len] [...bytes]',
+   text:'<b>DEF_PATTERN (0xFD)</b> names a byte sequence with an ID. Any time that pattern recurs — and in a fullerene it recurs constantly (all 12 pentagons have the same internal structure) — you emit <b>FC [id]</b> instead. Define one pentagon: 7 bytes. Reference it 12 times: 24 bytes. vs 84 bytes raw.',
+   demo:{label:'Pentagon pattern (5 nodes)',stream:'FD 01 07 22 01 00 01 02 01 03',expand:'= defines PENTAGON face with 5 vertex refs\nThen: FC 01 (×12) = 24 bytes\nvs 84 bytes raw\n3.5:1 ratio'}},
+
+  {key:'0xFC',group:'compress',title:'REF_PATTERN',sub:'inline a named sub-stream',spd:9,
+   tess:()=>{ let s=''; for(let i=0;i<12;i++){const a=Math.PI/6*i,x=95+65*Math.cos(a),y=120+65*Math.sin(a);let p=[];for(let v=0;v<5;v++){const va=Math.PI/180*(72*v-90);p.push(`${(x+14*Math.cos(va)).toFixed(1)},${(y+14*Math.sin(va)).toFixed(1)}`);}s+=`<polygon points="${p.join(' ')}" fill="rgba(200,31,63,.18)" stroke="${CR}" stroke-width=".9"/>`;s+=`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" font-size="7" fill="${NX2}">FC</text>`;}s+=`<circle cx="95" cy="120" r="10" fill="${NX}" opacity=".8"/>`;s+=`<text x="95" y="124" text-anchor="middle" font-size="7" fill="#000">DEF</text>`;return wrap(s); },
+   h:'FC [id] → inline the pattern at id',
+   text:'<b>REF_PATTERN (0xFC)</b> expands a previously defined pattern at the point it appears in the stream. The parser sees <b>FC 01</b> and silently substitutes the DEF_PATTERN bytes. From outside, the stream reads as fully expanded. From inside, it is a pointer table — perfect for embedded systems with tiny code space.',
+   demo:{label:'12 pentagon references',stream:'FC 01 FC 01 FC 01 FC 01 FC 01 FC 01 FC 01 FC 01 FC 01 FC 01 FC 01 FC 01',expand:'= 12 pentagon face definitions\n24 bytes\nvs 84 bytes raw'}},
+
+  {key:'0xFA',group:'compress',title:'THE DELTA STREAM',sub:'only transmit what changed',spd:10,
+   tess:tDelta,
+   h:'FA [base_marker] [offset]',
+   text:'<b>DELTA (0xFA)</b> encodes a marker as a base marker plus a numeric offset, saving a full byte when adjacent markers in a sequence differ only slightly. A telemetry update that changes altitude by 2m does not retransmit all 8 telemetry bytes — it sends one DELTA pair. Critical for bandwidth-limited drone telemetry links.',
+   demo:{label:'Altitude update',stream:'FA 03 02',expand:'= TELEMETRY + offset(+2)\n→ altitude now 32m (was 30m)\n3 bytes vs 8 bytes full snapshot'}},
+
+  {key:'0x20',group:'compute',title:'VERTEX — COMPUTE NODE',sub:'60 micro-op units in C60',spd:12,
+   tess:tVertexCompute,
+   h:'20 [vertex_id] [op_code]',
+   text:'Every vertex in the fullerene lattice is a <b>compute node</b>. The <b>VERTEX (0x20)</b> marker declares it with an ID and an op_code (what micro-operation this node performs). 60 vertices = 60 simultaneous micro-ops. In a microscale system, each vertex is a logic unit; the graph is the CPU.',
+   demo:{label:'Declare vertex 7',stream:'20 07 03',expand:'= VERTEX id=7, op=TELEMETRY_GATE\n→ node 7 filters sensor data\nbefore it reaches the mission stream'}},
+
+  {key:'0x21',group:'compute',title:'EDGE — COMMS CHANNEL',sub:'90 data channels in C60',spd:9,
+   tess:tEdgeChannel,
+   h:'21 [v_from] [v_to] [bandwidth]',
+   text:'Every edge in the fullerene is a <b>communications channel</b> between two compute nodes. The <b>EDGE (0x21)</b> marker defines which two vertices it connects and a bandwidth byte. 90 edges = 90 data paths. This is the interconnect fabric of the microscale computer, encoded in the NullNX stream itself.',
+   demo:{label:'Edge 12→45 at full bandwidth',stream:'21 0C 2D FF',expand:'= EDGE from vertex 12 to 45\nbandwidth: 0xFF (max)\n4 bytes = one full data path declaration'}},
+
+  {key:'0x22',group:'compute',title:'PENTAGON — MEMORY CELL',sub:'12 × 5-node state faces',spd:14,
+   tess:tPentagon,
+   h:'22 [face_id] [v0][v1][v2][v3][v4]',
+   text:'In C60, the 12 pentagonal faces form the structural anchors. In NullNX they are <b>memory cells</b> — each one stores a 5-byte state payload indexed by face ID. Mission parameters, last known positions, sensor history: all live in pentagon state cells, indexed directly in the stream without a separate database.',
+   demo:{label:'Pentagon face 0 state',stream:'22 00 0C 2D 01 0F 3A',expand:'= PENTAGON face 0\nvertices: 12, 45, 1, 15, 58\n7 bytes = full 5-node face declaration'}},
+
+  {key:'0x23',group:'compute',title:'HEXAGON — COMPUTE SURFACE',sub:'20 × 6-node processing faces',spd:8,
+   tess:tHexFace,
+   h:'23 [face_id] [v0]...[v5]',
+   text:'The 20 hexagonal faces of C60 are the <b>main compute surfaces</b> — larger than pentagons, they handle 6-vertex parallel operations. A HEXAGON marker defines one face and its 6 vertices in 8 bytes. 20 hexagons = the main processing array of the microscale computer.',
+   demo:{label:'Hexagon face 3',stream:'23 03 0A 1B 0C 2D 3E 0F',expand:'= HEXAGON face 3\nvertices: 10,27,12,45,62,15\n8 bytes = 6-vertex compute surface'}},
+
+  {key:'0x26',group:'compute',title:'STATE CELL',sub:'mission params in-graph',spd:13,
+   tess:tStateCell,
+   h:'26 [face_id] [state_byte]',
+   text:'The <b>STATE (0x26)</b> marker stores one byte of state against a face ID. Because the fullerene has 32 faces, you have 32 independently addressable state slots baked into the stream itself — no external RAM required for mission parameters. Latitude, longitude, altitude, speed, battery: all in the graph.',
+   demo:{label:'Store altitude in face 2',stream:'26 02 1E',expand:'= STATE: face 2 = 0x1E (30m)\nupdating later:\n26 02 20 = face 2 = 0x20 (32m)\none byte changes, two bytes in stream'}},
+
+  {key:'0x03',group:'telemetry',title:'TELEMETRY GATE',sub:'sensor data in 2 bytes',spd:10,
    tess:tTelemetry,
-   h:'Sensors in 8 bytes.',
-   text:'Temperature, battery level, altitude, and ground speed are packed into a single 8-byte telemetry frame. Designed specifically for low-bandwidth drone telemetry links operating under extreme RF conditions.',
-   demo:{label:'Telemetry frame',stream:'03 19 5C 1E',expand:'→ temp: 25°C | batt: 92%\n→ alt: 30m | spd: 8m/s\n→ frame size: 8 bytes'}}
+   h:'03 [value_byte]',
+   text:'<b>TELEMETRY (0x03)</b> encodes one sensor reading as a single payload byte. Temperature, battery, altitude, speed — each one is 2 bytes in the stream. A complete 4-sensor snapshot is 8 bytes. Combine with DELTA encoding for live telemetry updates that transmit only the sensors that changed.',
+   demo:{label:'4-sensor snapshot',stream:'03 19 03 5C 03 1E 03 08',expand:'= TEMP=25°C BATT=92% ALT=30m SPD=8m/s\n8 bytes total\nvs 40 bytes JSON {"temp":25,"batt":92,...}'}},
+
+  {key:'0x10',group:'mission',title:'MISSION — TAKEOFF',sub:'launch command + altitude',spd:7,
+   tess:()=>{let s='';s+=`<circle cx="95" cy="180" r="30" fill="#0a2020" stroke="${NX2}" stroke-width="1.2"/>`;s+=`<text x="95" y="185" text-anchor="middle" font-size="9" fill="${NX2}">PAD</text>`;for(let i=0;i<8;i++){const a=Math.PI/4*i,x=95+55*Math.cos(a),y=180+55*Math.sin(a);s+=`<line x1="95" y1="180" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${NX}" stroke-width=".7" opacity=".4" stroke-dasharray="2,4"/>`;}s+=`<circle cx="95" cy="80" r="20" fill="${NX}" opacity=".8"/>`;s+=`<text x="95" y="76" text-anchor="middle" font-size="7" fill="#000">0x10</text>`;s+=`<text x="95" y="88" text-anchor="middle" font-size="7" fill="#000">TKOF</text>`;s+=`<line x1="95" y1="100" x2="95" y2="150" stroke="${NX}" stroke-width="1.5" marker-end="url(#u)"/>`;s+=`<defs><marker id="u" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,6L3,0L6,6Z" fill="${NX}"/></marker></defs>`;return wrap(s);},
+   h:'10 [altitude_m]',
+   text:'<b>TAKEOFF (0x10)</b> is the first ArduPilot-compatible command in the NullNX mission extension. One byte: target altitude in meters. Combined with the stream\'s lossless compression, an entire 5-waypoint agricultural mission including takeoff, coverage passes, and RTL fits in 13 bytes.',
+   demo:{label:'Takeoff to 30m',stream:'10 1E',expand:'= NAV_TAKEOFF, alt=30m\n2 bytes\nvs "command: NAV_TAKEOFF, param7: 30.0"\n= 38 bytes in text format'}},
+
+  {key:'0x11',group:'mission',title:'MISSION — WAYPOINT',sub:'3-byte compressed nav command',spd:9,
+   tess:()=>{let s='';const wps=[[55,80],[120,100],[80,140],[110,170],[65,200]];wps.forEach(([x,y],i)=>{s+=`<circle cx="${x}" cy="${y}" r="${i===0?7:5}" fill="${i===0?NX:NX2}" opacity=".8"/>`;s+=`<text x="${x}" y="${y+4}" text-anchor="middle" font-size="7" fill="#000">${i+1}</text>`;if(i<wps.length-1){const[nx,ny]=wps[i+1];s+=`<line x1="${x}" y1="${y}" x2="${nx}" y2="${ny}" stroke="${NX}" stroke-width="1.2" opacity=".7"/>`;}}); s+=`<text x="95" y="238" text-anchor="middle" font-size="8" fill="${NX}">5 waypoints</text>`;s+=`<text x="95" y="252" text-anchor="middle" font-size="8" fill="${DIM}">= 15 bytes in NullNX</text>`;s+=`<text x="95" y="264" text-anchor="middle" font-size="7" fill="${WN}">vs ~200 bytes in .plan</text>`;return wrap(s);},
+   h:'11 [lat_s] [lon_s] [alt_s]',
+   text:'<b>WAYPOINT (0x11)</b> stores a navigation coordinate in 3 payload bytes using scaled integer encoding. Full float precision can be restored at the flight controller. A 5-waypoint coverage pass = 15 bytes. Combine with RUN for repeated passes: <b>FE 05 11 26 00 1E</b> = 4 bytes for 5 identical-altitude waypoints.',
+   demo:{label:'Waypoint: 38.0°N 97.0°W 30m',stream:'11 26 00 1E',expand:'= WAYPOINT\nlat_s=38 lon_s=0 alt_s=30\n4 bytes per waypoint\n5 waypoints = 20 bytes total'}},
+
+  {key:'0x12',group:'mission',title:'MISSION — LAND',sub:'single-byte terminator',spd:8,
+   tess:()=>{let s='';s+=`<circle cx="95" cy="80" r="20" fill="${NX}" opacity=".7"/>`;s+=`<text x="95" y="76" text-anchor="middle" font-size="7" fill="#000">0x12</text>`;s+=`<text x="95" y="88" text-anchor="middle" font-size="7" fill="#000">LAND</text>`;s+=`<line x1="95" y1="100" x2="95" y2="160" stroke="${NX}" stroke-width="1.5"/>`;s+=`<rect x="25" y="160" width="140" height="20" rx="2" fill="#0a2020" stroke="${NX2}" stroke-width="1"/>`;s+=`<text x="95" y="174" text-anchor="middle" font-size="8" fill="${NX2}">LANDING ZONE</text>`;for(let i=0;i<6;i++){const x=35+i*24;s+=`<line x1="${x}" y1="180" x2="${x+12}" y2="195" stroke="${WN}" stroke-width="1.5" opacity=".6"/>`;}s+=`<text x="95" y="238" text-anchor="middle" font-size="8" fill="${NX}">1 byte = mission end</text>`;s+=`<text x="95" y="252" text-anchor="middle" font-size="7" fill="${DIM}">full mission: TKOF+5WP+LAND</text>`;s+=`<text x="95" y="264" text-anchor="middle" font-size="7" fill="${NX}">= 22 bytes</text>`;return wrap(s);},
+   h:'12 — no payload',
+   text:'<b>LAND (0x12)</b> terminates a mission stream in a single byte with no payload. Combined with TAKEOFF and WAYPOINT, a complete 5-leg agricultural drone mission — takeoff, five coverage waypoints at 30m, and landing — fits in <b>22 bytes</b>. The same mission in a QGroundControl .plan file is ~2,400 bytes.',
+   demo:{label:'Complete 3-step mission',stream:'10 1E 11 26 00 1E 11 27 01 1E 12',expand:'= TAKEOFF 30m\n  WAYPOINT 38.0,-97.0,30m\n  WAYPOINT 38.001,-97.001,30m\n  LAND\n11 bytes total'}},
+
+  {key:'0x04',group:'refs',title:'JSON_REF',sub:'large config stays off-stream',spd:11,
+   tess:tJsonRef,
+   h:'04 [config_id]',
+   text:'<b>JSON_REF (0x04)</b> keeps complex configuration out of the mission stream. The stream holds a 2-byte reference; the actual JSON lives in a file on the drone\'s storage. When that config changes, you update the file — not the stream. The stream stays byte-stable. Reload = re-expand from the same tiny stream, pull the new config.',
+   demo:{label:'Reference config 1',stream:'04 01',expand:'= points to config_1.json\n2 bytes in stream\n380 bytes in file\nnever copied into mission memory'}},
+
+  {key:'0x05',group:'refs',title:'BINARY_REF',sub:'raw blob addressed by ID',spd:9,
+   tess:tBinaryRef,
+   h:'05 [blob_id]',
+   text:'<b>BINARY_REF (0x05)</b> references a raw binary blob by an 8-bit ID. Lidar scans, camera frames, radar returns — all stored in the 1GB drive as blob files, never in the mission stream. The stream carries only the 2-byte pointer. This is the NullNX answer to "how do you offload sensor data without touching the mission logic."',
+   demo:{label:'Reference sensor blob 0xAE',stream:'05 AE',expand:'= points to sensor_blob_0xAE.bin\n2 bytes in stream → 4096 byte blob\n2048:1 stream compression\nblob swapped independently of mission'}},
+
+  {key:'0xFF',group:'genesis',title:'INSTANT OFFLOAD / RELOAD',sub:'full state ↔ 9-byte stream',spd:6,
+   tess:tOffload,
+   h:'compress → offload → reload → expand',
+   text:'The full capability: a 60-node fullerene compute graph with mission data, telemetry gates, and config refs is <b>serialised to a NullNX stream</b>. The stream can be as small as 9–20 bytes. Offload = write the stream to the 1GB drive. Reload = read the stream, expand to full graph in microseconds. Swap missions without losing any state.',
+   demo:{label:'Offload/reload cycle',stream:'FD 01 07 22 01 .. FC 01 10 1E 11 26 ..',expand:'define patterns → ref patterns → mission\n→ full state in ~20 bytes\nwrite to drive: <1ms\nread + expand: <1ms\nclears working RAM for next mission'}},
+
+  {key:'0x04+0x05',group:'refs',title:'JNI BRIDGE',sub:'C++ core ↔ Java engine',spd:13,
+   tess:tJNI,
+   h:'libnullnxbridge.so (or .dll / .dylib)',
+   text:'The <b>JNI bridge</b> lets a Java mission engine call the C++ NullNX parser without copying data. The C++ side handles binary serialization and parsing at full speed; the Java side handles mission scheduling, UI, and high-level logic. The bridge transfers a <b>jlong pointer</b> — the stream never gets duplicated in memory.',
+   demo:{label:'Java calls C++ parse',stream:'bridge.parseStream(handle, "mission.img")',expand:'C++ NullNXStreamManager::parse_stream()\noutput captured via OutputCapture\nreturned as Java String\nno data copy across the boundary'}},
+
+  {key:'ECC',group:'refs',title:'HAMMING WRAP',sub:'error-correct any payload byte',spd:15,
+   tess:tHamming,
+   h:'encode payload → transmit → decode',
+   text:'Any NullNX payload byte can be <b>Hamming-encoded</b> before it enters the stream, adding just 5 parity bits to an 8-bit value. The parser Hamming-decodes it on read. One-bit errors are corrected automatically — no retransmit, no mission abort. On a 1GB drive in an agricultural environment (vibration, heat, EMI), this matters.',
+   demo:{label:'Encode TELEMETRY value 25',stream:'03 [hamming(0x19)]',expand:'0x19 (25) → Hamming encode\n→ 13-bit codeword\n→ stored as 2 bytes\n→ 1-bit flip auto-corrected on read\nnever corrupts altitude or GPS data'}},
+
+  {key:'0x00→Σ',group:'genesis',title:'THE FULL STREAM',sub:'complete mission in one read',spd:5,
+   tess:tBinaryStream,
+   h:'genesis → expand → mission → offload',
+   text:'The complete NullNX pipeline: <b>one genesis byte (0x00)</b> seeds the expansion. EXPAND opcodes grow the fullerene lattice. DEF_PATTERN / REF_PATTERN compress repeated geometry. Mission commands encode nav data. BINARY_REF and JSON_REF keep large data off-stream. The whole thing fits in a few dozen bytes and can be offloaded, reloaded, and re-expanded on any compatible system.',
+   demo:{label:'Full mission stream',stream:'00 FB 03 20 FD 01 07 22 01 .. FC 01 10 1E 11 26 00 1E 12',expand:'genesis → 252 vertices → pentagon pattern\n→ 12 pentagons → TAKEOFF → WAYPOINT → LAND\n~20 bytes\nexpands to full 60-node compute graph\n+ complete mission\nstored on 1GB drive in microseconds'}},
 ];
 
-const GROUPS=[
-  {id:'all',label:'ALL CARDS'},
-  {id:'genesis',label:'GENESIS'},
-  {id:'core',label:'CORE ENGINE'},
-  {id:'bridge',label:'JNI & OFFLOAD'},
-  {id:'graph',label:'GRAPH & MESH'},
-  {id:'storage',label:'STORAGE & REF'}
-];
-
-function buildFilterBar(){
-  const bar=document.getElementById('filterbar');
-  GROUPS.forEach(g=>{
-    const btn=document.createElement('button');
-    btn.className=`fbtn ${g.id==='all'?'on':''}`;
-    btn.textContent=g.label;
-    btn.onclick=()=>filterCards(g.id,btn);
-    bar.appendChild(btn);
-  });
-}
-
-function filterCards(groupId,btn){
-  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  renderDeck(groupId);
-}
-
-function renderDeck(filterGroup){
-  const deck=document.getElementById('deck');
-  deck.innerHTML='';
-  CARDS.forEach(c=>{
-    if(filterGroup!=='all' && c.group!==filterGroup) return;
-    const card=document.createElement('div');
-    card.className='card';
-    card.innerHTML=`
-      <div class="inner" style="--spd:${c.spd}s;">
-        <div class="face">
-          ${c.tess()}
-          <div class="ftitle">
-            <span class="marker">${c.key} · ${c.group.toUpperCase()}</span>
-            <b>${c.title}</b>
-            <i>${c.sub}</i>
-          </div>
-        </div>
-        <div class="face back">
-          <div class="btitle">${c.key} — ${c.title}</div>
-          <div class="bdesc">
-            <b>${c.h}</b><br>${c.text}
-            <div class="demo">
-              <div style="font-size:.6rem;color:var(--dim);">${c.demo.label}</div>
-              <div class="stream">0x ${c.demo.stream}</div>
-              <div class="expand">${c.demo.expand.replace(/\n/g,'<br>')}</div>
-            </div>
-          </div>
-          <button class="mbtn" onclick="event.stopPropagation();this.closest('.card').classList.remove('flipped');">↩ FLIP BACK</button>
-        </div>
+/* ---- render ---- */
+function buildCard(c,idx){
+  const div=document.createElement('div');
+  div.className='card';
+  div.style.setProperty('--spd',c.spd+'s');
+  div.dataset.group=c.group;
+  const demoHTML=c.demo?`<div class="demo">
+    <div style="color:var(--dim);font-size:.6rem;">${c.demo.label}</div>
+    <div class="stream">${c.demo.stream}</div>
+    <div class="expand">${c.demo.expand.replace(/\n/g,'<br>')}</div>
+    ${c.demo.ratio?'<span class="ratio">40:1 compression</span>':''}
+  </div>`:'';
+  div.innerHTML=`<div class="inner">
+    <div class="face front">
+      ${c.tess()}
+      <div class="ftitle">
+        <span class="marker">${c.key}</span>
+        <b>${c.title}</b>
+        <i>${c.sub}</i>
       </div>
-    `;
-    card.onclick=()=>card.classList.toggle('flipped');
-    deck.appendChild(card);
-  });
+    </div>
+    <div class="face back">
+      <div class="btitle">${c.h}</div>
+      <div class="bdesc">${c.text}</div>
+      ${demoHTML}
+    </div>
+  </div>`;
+  div.querySelector('.front').addEventListener('click',()=>div.classList.toggle('flipped'));
+  div.querySelector('.back').addEventListener('click',()=>div.classList.toggle('flipped'));
+  return div;
 }
 
-window.onload=()=>{
-  buildFilterBar();
-  renderDeck('all');
-};
+const deck=document.getElementById('deck');
+CARDS.forEach((c,i)=>deck.appendChild(buildCard(c,i)));
+
+/* ---- filter ---- */
+const groups=[...new Set(CARDS.map(c=>c.group))];
+const fb=document.getElementById('filterbar');
+const allBtn=document.createElement('button');
+allBtn.className='fbtn on';allBtn.textContent='ALL';
+fb.appendChild(allBtn);
+groups.forEach(g=>{
+  const b=document.createElement('button');
+  b.className='fbtn';b.textContent=g.toUpperCase();
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.querySelectorAll('.card').forEach(c=>{ c.style.display=c.dataset.group===g?'':'none'; });
+  });
+  fb.appendChild(b);
+});
+allBtn.addEventListener('click',()=>{
+  document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));
+  allBtn.classList.add('on');
+  document.querySelectorAll('.card').forEach(c=>c.style.display='');
+});
 </script>
 </body>
 </html>
