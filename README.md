@@ -11,3 +11,5 @@ The Goal: It bypasses traditional software bloat by turning data transfer into t
 
 
 https://21centjoe.github.io/Nullnx-Capability-Deck/
+
+###Developed by Joseph La Follette
